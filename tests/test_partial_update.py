@@ -1,17 +1,18 @@
+import pytest
 from faker import Faker
+from models.booking import Booking
 
 faker = Faker()
 
 
-def test_patch_booking(client, token, booking_payload, booking):
+@pytest.mark.parametrize("field", ["firstname", "lastname"])
+def test_patch_booking(client, token, booking_payload, field):
+    # create
     bid = client.create(booking_payload)["bookingid"]
-    new_lastname = faker.last_name()
-    patch_payload = {"lastname": new_lastname}
-    updated = client.partial_update(bid, patch_payload, token)
-    assert updated["lastname"] == new_lastname
-    booking = client.get(bid)
-    assert booking["firstname"] == booking_payload["firstname"]
-    assert booking["totalprice"] == booking_payload["totalprice"]
-    assert booking["depositpaid"] == booking_payload["depositpaid"]
-    assert booking["bookingdates"]["checkin"] == booking_payload["bookingdates"]["checkin"]
-    assert booking["bookingdates"]["checkout"] == booking_payload["bookingdates"]["checkout"]
+    new_val = faker.first_name() if field == "firstname" else faker.last_name()
+    updated = client.partial_update(bid, {field: new_val}, token)
+    assert updated[field] == new_val
+
+    # verify full
+    full = Booking.parse_obj(client.get(bid))
+    assert getattr(full, field) == new_val

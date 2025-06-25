@@ -1,16 +1,22 @@
+import json
 import pytest
+from pathlib import Path
 from utils.api_client import APIClient
+from faker import Faker
 import random
 from datetime import date, timedelta
-from faker import Faker
 
 faker = Faker()
-BASE_URL = "https://restful-booker.herokuapp.com"
+
+# Load config
+CFG = json.loads(Path(__file__).parent.joinpath("config/config.json").read_text())
+BASE_URL = CFG["base_url"]
+TIMEOUT = CFG["timeout"]
 
 
 @pytest.fixture(scope="session")
 def client():
-    return APIClient(BASE_URL)
+    return APIClient(BASE_URL, timeout=TIMEOUT)
 
 
 @pytest.fixture(scope="session")
